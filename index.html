@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>String & Theory - Guitar Chord Builder & Harmonic Visualizer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #0d0f12;
+      --bg-card: #15181e;
+      --bg-card-hover: #1c2029;
+      --border-color: #282d37;
+      --accent-gold: #f59e0b;
+      --accent-gold-glow: rgba(245, 158, 11, 0.35);
+      --accent-cyan: #38bdf8;
+      --accent-cyan-glow: rgba(56, 189, 248, 0.35);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --string-color: #4b5563;
+      --fret-color: #374151;
+      --nut-color: #d1d5db;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      line-height: 1.5;
+      padding: 0;
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    header {
+      background: rgba(13, 15, 18, 0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-family: 'Cinzel', serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-main);
+      text-decoration: none;
+      letter-spacing: 0.05em;
+    }
+    .logo span { color: var(--accent-gold); }
+
+    .tagline {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .hero h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 2.25rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .hero h1 em { font-style: normal; color: var(--accent-gold); }
+    .hero p { color: var(--text-muted); max-width: 600px; margin: 0 auto; font-size: 1rem; }
+
+    .control-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    @media (min-width: 900px) {
+      .control-grid { grid-template-columns: 320px 1fr; }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .card-title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .select-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .select-group label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    
+    select, button {
+      background: #1e232d;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    select:hover, button:hover {
+      border-color: var(--accent-gold);
+    }
+    select:focus, button:focus {
+      outline: none;
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 0 2px var(--accent-gold-glow);
+    }
+
+    .interval-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+    }
+    .interval-btn {
+      background: #1a1e27;
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 0.5rem 0.25rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+    .interval-btn.active {
+      background: var(--accent-cyan);
+      color: #000;
+      border-color: var(--accent-cyan);
+      font-weight: 700;
+    }
+    .interval-btn.root {
+      background: var(--accent-gold);
+      color: #000;
+      border-color: var(--accent-gold);
+      cursor: not-allowed;
+    }
+
+    .display-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .chord-header-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    .chord-title-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+    .chord-name {
+      font-family: 'Cinzel', serif;
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: var(--accent-gold);
+      line-height: 1.1;
+    }
+    .chord-formula {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .playback-controls {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      background: var(--accent-gold);
+      color: #000;
+      font-weight: 700;
+      border: none;
+    }
+    .btn-primary:hover {
+      background: #e59000;
+    }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--accent-cyan);
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+    .btn-secondary:hover {
+      background: rgba(56, 189, 248, 0.1);
+    }
+
+    /* Voicing Selector Styles */
+    .voicing-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .voicing-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 0.75rem;
+    }
+    .voicing-card {
+      background: #1a1e27;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+    .voicing-card:hover {
+      border-color: var(--accent-cyan);
+      background: #202633;
+    }
+    .voicing-card.active {
+      border-color: var(--accent-gold);
+      background: rgba(245, 158, 11, 0.1);
+      box-shadow: 0 0 10px var(--accent-gold-glow);
+    }
+    .voicing-title {
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--text-main);
+    }
+    .voicing-frets {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--accent-cyan);
+    }
+    .voicing-tag {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    /* Fretboard Canvas Container */
+    .fretboard-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      overflow-x: auto;
+    }
+    .fretboard-wrap {
+      min-width: 800px;
+      position: relative;
+      user-select: none;
+    }
+
+    .fretboard-neck {
+      display: grid;
+      grid-template-columns: 40px repeat(12, 1fr);
+      border-radius: 4px;
+      background: #11141a;
+      border: 1px solid #232833;
+      position: relative;
+    }
+
+    .fret-header {
+      display: grid;
+      grid-template-columns: 40px repeat(12, 1fr);
+      margin-bottom: 0.5rem;
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    .string-row {
+      height: 40px;
+      display: grid;
+      grid-template-columns: 40px repeat(12, 1fr);
+      position: relative;
+    }
+    .string-row::before {
+      content: '';
+      position: absolute;
+      left: 40px;
+      right: 0;
+      top: 50%;
+      height: var(--string-thickness, 2px);
+      background: var(--string-color);
+      z-index: 1;
+      transform: translateY(-50%);
+      transition: background-color 0.1s ease;
+    }
+    .string-row.vibrating::before {
+      background: var(--accent-gold);
+      box-shadow: 0 0 8px var(--accent-gold);
+    }
+
+    .string-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      border-right: 4px solid var(--nut-color);
+      background: #15181e;
+      z-index: 2;
+    }
+
+    .fret-cell {
+      border-right: 2px solid var(--fret-color);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      cursor: pointer;
+    }
+    .fret-cell:hover .note-badge:not(.active) {
+      opacity: 0.4;
+      transform: scale(0.85);
+    }
+
+    /* Single Fretboard Marker Dots */
+    .fret-marker {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #232936;
+      pointer-events: none;
+      z-index: 0;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .note-badge {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      opacity: 0;
+      transform: scale(0.5);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    .note-badge.active {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .note-badge.muted-note {
+      opacity: 0.2;
+    }
+    .note-badge.root {
+      background: var(--accent-gold);
+      color: #000;
+      box-shadow: 0 0 10px var(--accent-gold-glow);
+    }
+    .note-badge.tone {
+      background: var(--accent-cyan);
+      color: #000;
+      box-shadow: 0 0 10px var(--accent-cyan-glow);
+    }
+
+    /* Pulse Glow Effect during Playback */
+    @keyframes rootPulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.8); }
+      50% { transform: scale(1.3); box-shadow: 0 0 20px 8px rgba(245, 158, 11, 0.9); }
+      100% { transform: scale(1); box-shadow: 0 0 10px var(--accent-gold-glow); }
+    }
+    @keyframes tonePulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.8); }
+      50% { transform: scale(1.3); box-shadow: 0 0 20px 8px rgba(56, 189, 248, 0.9); }
+      100% { transform: scale(1); box-shadow: 0 0 10px var(--accent-cyan-glow); }
+    }
+
+    .note-badge.playing-root {
+      animation: rootPulse 0.4s ease-out;
+      z-index: 10;
+    }
+    .note-badge.playing-tone {
+      animation: tonePulse 0.4s ease-out;
+      z-index: 10;
+    }
+
+    /* Theory Guide Section */
+    .theory-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    @media(min-width: 768px) {
+      .theory-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .theory-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+    }
+    .theory-card h3 {
+      font-family: 'Cinzel', serif;
+      color: var(--accent-gold);
+      margin-bottom: 0.75rem;
+    }
+    .theory-card p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      text-align: left;
+    }
+    th, td {
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+    td { color: var(--text-main); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="#" class="logo">String <span>&</span> Theory</a>
+    <span class="tagline">Interactive Chord Builder</span>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Build a chord. <em>Hear the connection.</em></h1>
+      <p>Select a root, pick a quality preset, or toggle individual intervals to create custom voicings and listen to their harmonic colors.</p>
+    </section>
+
+    <div class="control-grid">
+      <!-- Controls Panel -->
+      <aside class="card">
+        <div class="card-title">
+          <span>Chord Controls</span>
+        </div>
+
+        <div class="select-group">
+          <label for="root-select">Root Note</label>
+          <select id="root-select">
+            <option value="C">C</option>
+            <option value="C#">C♯ / D♭</option>
+            <option value="D">D</option>
+            <option value="D#">D♯ / E♭</option>
+            <option value="E">E</option>
+            <option value="F">F</option>
+            <option value="F#">F♯ / G♭</option>
+            <option value="G">G</option>
+            <option value="G#">G♯ / A♭</option>
+            <option value="A">A</option>
+            <option value="A#">A♯ / B♭</option>
+            <option value="B">B</option>
+          </select>
+        </div>
+
+        <div class="select-group">
+          <label for="quality-select">Chord Quality / Preset</label>
+          <select id="quality-select">
+            <optgroup label="Triads">
+              <option value="major" selected>Major Triad (1-3-5)</option>
+              <option value="minor">Minor Triad (1-♭3-5)</option>
+              <option value="sus2">Suspended 2nd (1-2-5)</option>
+              <option value="sus4">Suspended 4th (1-4-5)</option>
+              <option value="dim">Diminished (1-♭3-♭5)</option>
+              <option value="aug">Augmented (1-3-♯5)</option>
+            </optgroup>
+            <optgroup label="Sevenths">
+              <option value="dom7">Dominant 7th (1-3-5-♭7)</option>
+              <option value="maj7">Major 7th (1-3-5-7)</option>
+              <option value="m7">Minor 7th (1-♭3-5-♭7)</option>
+              <option value="m7b5">Half-Diminished / m7♭5 (1-♭3-♭5-♭7)</option>
+            </optgroup>
+            <optgroup label="Extensions">
+              <option value="add9">Add 9 (1-3-5-9)</option>
+              <option value="m9">Minor 9th (1-♭3-5-♭7-9)</option>
+              <option value="maj9">Major 9th (1-3-5-7-9)</option>
+            </optgroup>
+            <option value="custom">Custom Interval Selection</option>
+          </select>
+        </div>
+
+        <div class="select-group">
+          <label for="inversion-select">Inversion</label>
+          <select id="inversion-select">
+            <option value="0">Root Position</option>
+            <option value="1">1st Inversion (3rd in Bass)</option>
+            <option value="2">2nd Inversion (5th in Bass)</option>
+            <option value="3">3rd Inversion (7th in Bass)</option>
+          </select>
+        </div>
+
+        <div class="select-group">
+          <label>Toggle Custom Intervals</label>
+          <div class="interval-grid" id="interval-grid">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Display Panel -->
+      <div class="display-panel">
+        <div class="chord-header-card">
+          <div class="chord-title-wrap">
+            <div class="chord-name" id="chord-display-name">C Major</div>
+            <div class="chord-formula" id="chord-formula-display">Notes: C - E - G | Formula: 1 - 3 - 5</div>
+          </div>
+
+          <div class="playback-controls">
+            <button class="btn-primary" id="btn-strum">▶ Strum Chord</button>
+            <button class="btn-secondary" id="btn-arpeggio">∿ Arpeggiate</button>
+          </div>
+        </div>
+
+        <!-- Voicing Selector Section -->
+        <div class="voicing-section">
+          <div class="card-title">
+            <span>Playable Guitar Voicings</span>
+            <span style="font-size: 0.75rem; font-weight: normal; color: var(--text-dim);">Select a shape to isolate on fretboard</span>
+          </div>
+          <div class="voicing-list" id="voicing-list">
+            <!-- Dynamically populated with voicing cards -->
+          </div>
+        </div>
+
+        <!-- Interactive Fretboard Visualizer -->
+        <div class="fretboard-card">
+          <div class="card-title" style="margin-bottom: 1rem;">
+            <span>Interactive Fretboard Visualizer (Standard Tuning: E A D G B E)</span>
+          </div>
+
+          <div class="fretboard-wrap">
+            <div class="fret-header">
+              <div>Open</div>
+              <div>Fret 1</div><div>2</div><div>3</div><div>4</div><div>5</div>
+              <div>6</div><div>7</div><div>8</div><div>9</div><div>10</div>
+              <div>11</div><div>12</div>
+            </div>
+
+            <div class="fretboard-neck" id="fretboard-neck">
+              <!-- Dynamically populated 6 string rows -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ear Training & Theory Reference -->
+    <section class="theory-grid">
+      <div class="theory-card">
+        <h3>Interval Color Chart</h3>
+        <p>Understanding interval relationships helps build ear memory and harmonic intuition.</p>
+        <table>
+          <thead>
+            <tr><th>Interval</th><th>Name</th><th>Sonic Quality</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>1</strong></td><td>Root</td><td>Stable, home foundation.</td></tr>
+            <tr><td><strong>♭3 / 3</strong></td><td>Minor / Major 3rd</td><td>Defines emotional color (Sad vs. Happy).</td></tr>
+            <tr><td><strong>♭5 / 5</strong></td><td>Dim / Perfect 5th</td><td>Provides power, anchor, or instability.</td></tr>
+            <tr><td><strong>♭7 / 7</strong></td><td>Minor / Major 7th</td><td>Adds bluesy pull or lush sophistication.</td></tr>
+            <tr><td><strong>2 / 9</strong></td><td>9th / Sus2</td><td>Open, airy, floating harmonic tension.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="theory-card">
+        <h3>Interactive Ear Training Workouts</h3>
+        <p>Try switching between these specific chord setups to train your ears to feel subtle pitch changes:</p>
+        <ul style="color: var(--text-muted); font-size: 0.9rem; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem;">
+          <li><strong>Major vs. Minor:</strong> Keep C as root. Alternate between C Major and C Minor to hear the single 1-semitone shift on the 3rd.</li>
+          <li><strong>The Suspended Resolution:</strong> Select C Sus4, strum it, then quickly switch to C Major to feel the harmonic tension release.</li>
+          <li><strong>Lush Major 7ths:</strong> Compare C Major to C Major 7th to hear the smooth, dreamy warmth added by the natural 7th degree.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // --- THEORY & AUDIO DATA STRUCTURES ---
+    const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const GUITAR_STRINGS = [
+      { name: 'E', pitch: 64 }, // High E (E4)
+      { name: 'B', pitch: 59 }, // B3
+      { name: 'G', pitch: 55 }, // G3
+      { name: 'D', pitch: 50 }, // D3
+      { name: 'A', pitch: 45 }, // A2
+      { name: 'E', pitch: 40 }  // Low E (E2)
+    ];
+
+    const INTERVAL_DEGREES = [
+      { name: '1', semitones: 0, isRoot: true },
+      { name: '♭2', semitones: 1 },
+      { name: '2', semitones: 2 },
+      { name: '♭3', semitones: 3 },
+      { name: '3', semitones: 4 },
+      { name: '4', semitones: 5 },
+      { name: '♭5', semitones: 6 },
+      { name: '5', semitones: 7 },
+      { name: '♯5', semitones: 8 },
+      { name: '6', semitones: 9 },
+      { name: '♭7', semitones: 10 },
+      { name: '7', semitones: 11 }
+    ];
+
+    const CHORD_PRESETS = {
+      'major': [0, 4, 7],
+      'minor': [0, 3, 7],
+      'sus2': [0, 2, 7],
+      'sus4': [0, 5, 7],
+      'dim': [0, 3, 6],
+      'aug': [0, 4, 8],
+      'dom7': [0, 4, 7, 10],
+      'maj7': [0, 4, 7, 11],
+      'm7': [0, 3, 7, 10],
+      'm7b5': [0, 3, 6, 10],
+      'add9': [0, 2, 4, 7],
+      'm9': [0, 2, 3, 7, 10],
+      'maj9': [0, 2, 4, 7, 11]
+    };
+
+    // State
+    let currentRoot = 'C';
+    let currentQuality = 'major';
+    let currentInversion = 0;
+    let selectedIntervals = [...CHORD_PRESETS['major']];
+    let activeVoicings = [];
+    let selectedVoicingIndex = 0; // 0 = Full Fretboard / All Voicings
+
+    // --- WEB AUDIO SYNTHESIS ENGINE ---
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function midiToFreq(midi) {
+      return 440 * Math.pow(2, (midi - 69) / 12);
+    }
+
+    function playPluckSound(midiPitch, startTime = 0, duration = 2.0) {
+      initAudio();
+      const now = audioCtx.currentTime + startTime;
+      const freq = midiToFreq(midiPitch);
+
+      // Main Pluck Oscillator (Triangle + Fundamental)
+      const osc = audioCtx.createOscillator();
+      const subOsc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now);
+
+      subOsc.type = 'sine';
+      subOsc.frequency.setValueAtTime(freq / 2, now);
+
+      // Acoustic String Filter Envelope
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(freq * 4, now);
+      filter.frequency.exponentialRampToValueAtTime(freq * 0.8, now + duration);
+
+      // ADSR Envelope
+      gainNode.gain.setValueAtTime(0, now);
+      gainNode.gain.linearRampToValueAtTime(0.3, now + 0.015); // Quick attack
+      gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration); // Natural string decay
+
+      osc.connect(filter);
+      subOsc.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      osc.start(now);
+      subOsc.start(now);
+      osc.stop(now + duration);
+      subOsc.stop(now + duration);
+    }
+
+    // --- VOICING GENERATOR LOGIC ---
+    function generateVoicings(rootIndex, intervalSet) {
+      // Common standard chord shape patterns [Low E, A, D, G, B, High E]
+      const voicings = [{ title: 'Full Neck Theory', frets: null, tag: 'All matching notes' }];
+      
+      // Calculate active note pitch classes
+      const pitchClasses = intervalSet.map(i => (rootIndex + i) % 12);
+
+      // Standard open position presets mapping for major/minor
+      if (currentQuality === 'major' || currentQuality === 'minor') {
+        if (rootIndex === 0) { // C
+          voicings.push({ title: 'Open C Shape', frets: [-1, 3, 2, 0, 1, 0], tag: 'Open Position' });
+          voicings.push({ title: 'Barre 8th Fret', frets: [8, 10, 10, 9, 8, 8], tag: 'E-Shape Barre' });
+        } else if (rootIndex === 4) { // E
+          voicings.push({ title: 'Open E Shape', frets: [0, 2, 2, 1, 0, 0], tag: 'Open Position' });
+          voicings.push({ title: 'Barre 7th Fret', frets: [-1, 7, 9, 9, 9, 7], tag: 'A-Shape Barre' });
+        } else if (rootIndex === 7) { // G
+          voicings.push({ title: 'Open G Shape', frets: [3, 2, 0, 0, 0, 3], tag: 'Open Position' });
+          voicings.push({ title: 'Barre 3rd Fret', frets: [3, 5, 5, 4, 3, 3], tag: 'E-Shape Barre' });
+        } else if (rootIndex === 9) { // A
+          voicings.push({ title: 'Open A Shape', frets: [-1, 0, 2, 2, 2, 0], tag: 'Open Position' });
+          voicings.push({ title: 'Barre 5th Fret', frets: [5, 7, 7, 6, 5, 5], tag: 'E-Shape Barre' });
+        }
+      }
+
+      // Synthetic generic shape generator for other roots
+      if (voicings.length === 1) {
+        // Find root fret on 5th string (A) or 6th string (Low E)
+        const rootOnE = (rootIndex - 4 + 12) % 12;
+        const rootOnA = (rootIndex - 9 + 12) % 12;
+        
+        voicings.push({
+          title: `Barre ${rootOnE}th Fret`,
+          frets: [rootOnE, rootOnE + 2, rootOnE + 2, rootOnE + 1, rootOnE, rootOnE],
+          tag: 'Root on 6th String'
+        });
+        
+        if (rootOnA <= 7) {
+          voicings.push({
+            title: `Barre ${rootOnA}th Fret`,
+            frets: [-1, rootOnA, rootOnA + 2, rootOnA + 2, rootOnA + 2, rootOnA],
+            tag: 'Root on 5th String'
+          });
+        }
+      }
+
+      return voicings;
+    }
+
+    // --- DOM RENDERING LOGIC ---
+    function renderIntervalGrid() {
+      const container = document.getElementById('interval-grid');
+      container.innerHTML = '';
+
+      INTERVAL_DEGREES.forEach(deg => {
+        const btn = document.createElement('button');
+        btn.className = `interval-btn ${deg.isRoot ? 'root' : ''} ${selectedIntervals.includes(deg.semitones) ? 'active' : ''}`;
+        btn.textContent = deg.name;
+
+        if (!deg.isRoot) {
+          btn.addEventListener('click', () => {
+            document.getElementById('quality-select').value = 'custom';
+            if (selectedIntervals.includes(deg.semitones)) {
+              selectedIntervals = selectedIntervals.filter(s => s !== deg.semitones);
+            } else {
+              selectedIntervals.push(deg.semitones);
+              selectedIntervals.sort((a, b) => a - b);
+            }
+            updateApp();
+          });
+        }
+        container.appendChild(btn);
+      });
+    }
+
+    function renderVoicingList() {
+      const container = document.getElementById('voicing-list');
+      container.innerHTML = '';
+
+      const rootIdx = NOTE_NAMES.indexOf(currentRoot);
+      activeVoicings = generateVoicings(rootIdx, selectedIntervals);
+
+      activeVoicings.forEach((v, index) => {
+        const card = document.createElement('div');
+        card.className = `voicing-card ${selectedVoicingIndex === index ? 'active' : ''}`;
+        
+        const fretText = v.frets 
+          ? v.frets.map(f => f === -1 ? 'x' : f).reverse().join('-')
+          : 'All Frets';
+
+        card.innerHTML = `
+          <div class="voicing-title">${v.title}</div>
+          <div class="voicing-frets">${fretText}</div>
+          <div class="voicing-tag">${v.tag}</div>
+        `;
+
+        card.addEventListener('click', () => {
+          selectedVoicingIndex = index;
+          renderVoicingList();
+          renderFretboard();
+        });
+
+        container.appendChild(card);
+      });
+    }
+
+    function renderFretboard() {
+      const neck = document.getElementById('fretboard-neck');
+      neck.innerHTML = '';
+
+      const rootIdx = NOTE_NAMES.indexOf(currentRoot);
+      const activePitches = selectedIntervals.map(i => (rootIdx + i) % 12);
+      const activeVoicing = activeVoicings[selectedVoicingIndex];
+
+      GUITAR_STRINGS.forEach((str, stringIndex) => {
+        const row = document.createElement('div');
+        row.className = 'string-row';
+        row.id = `string-row-${stringIndex}`;
+        row.style.setProperty('--string-thickness', `${1 + (5 - stringIndex) * 0.5}px`);
+
+        // String Name Label
+        const label = document.createElement('div');
+        label.className = 'string-label';
+        label.textContent = str.name;
+        row.appendChild(label);
+
+        // 0-12 Frets
+        for (let fret = 0; fret <= 12; fret++) {
+          const cell = document.createElement('div');
+          cell.className = 'fret-cell';
+
+          // Single Fret Markers
+          if (stringIndex === 3 && [3, 5, 7, 9].includes(fret)) {
+            const marker = document.createElement('div');
+            marker.className = 'fret-marker';
+            cell.appendChild(marker);
+          }
+
+          const pitch = str.pitch + fret;
+          const noteIdx = pitch % 12;
+          const isNoteInChord = activePitches.includes(noteIdx);
+          
+          // Check if filtered by active voicing selection
+          let isVoicingNote = true;
+          if (activeVoicing && activeVoicing.frets) {
+            const allowedFret = activeVoicing.frets[stringIndex];
+            isVoicingNote = (allowedFret === fret);
+          }
+
+          if (isNoteInChord) {
+            const intervalShift = (noteIdx - rootIdx + 12) % 12;
+            const isRoot = (intervalShift === 0);
+            
+            const badge = document.createElement('div');
+            badge.className = `note-badge ${isRoot ? 'root' : 'tone'} ${isVoicingNote ? 'active' : 'muted-note'}`;
+            badge.id = `badge-${stringIndex}-${fret}`;
+            
+            const intervalObj = INTERVAL_DEGREES.find(d => d.semitones === intervalShift);
+            badge.textContent = intervalObj ? intervalObj.name : NOTE_NAMES[noteIdx];
+
+            cell.appendChild(badge);
+
+            cell.addEventListener('click', () => {
+              playPluckSound(pitch);
+              triggerBadgeAnimation(badge, isRoot, stringIndex);
+            });
+          }
+
+          row.appendChild(cell);
+        }
+
+        neck.appendChild(row);
+      });
+    }
+
+    function triggerBadgeAnimation(badge, isRoot, stringIndex) {
+      if (!badge) return;
+      const animClass = isRoot ? 'playing-root' : 'playing-tone';
+      badge.classList.remove('playing-root', 'playing-tone');
+      void badge.offsetWidth; // Force CSS reflow
+      badge.classList.add(animClass);
+
+      const row = document.getElementById(`string-row-${stringIndex}`);
+      if (row) {
+        row.classList.add('vibrating');
+        setTimeout(() => row.classList.remove('vibrating'), 400);
+      }
+    }
+
+    function updateChordDisplay() {
+      const rootName = currentRoot;
+      const qualityText = document.getElementById('quality-select').options[document.getElementById('quality-select').selectedIndex].text;
+      document.getElementById('chord-display-name').textContent = `${rootName} ${qualityText.split('(')[0]}`;
+
+      const rootIdx = NOTE_NAMES.indexOf(currentRoot);
+      const notesList = selectedIntervals.map(i => NOTE_NAMES[(rootIdx + i) % 12]).join(' - ');
+      const formulaList = selectedIntervals.map(i => {
+        const d = INTERVAL_DEGREES.find(deg => deg.semitones === i);
+        return d ? d.name : i;
+      }).join(' - ');
+
+      document.getElementById('chord-formula-display').textContent = `Notes: ${notesList} | Formula: ${formulaList}`;
+    }
+
+    function updateApp() {
+      renderIntervalGrid();
+      renderVoicingList();
+      renderFretboard();
+      updateChordDisplay();
+    }
+
+    // --- PLAYBACK SUITE ---
+    function getPlaybackNotes() {
+      const rootIdx = NOTE_NAMES.indexOf(currentRoot);
+      const activeVoicing = activeVoicings[selectedVoicingIndex];
+      const notesToPlay = [];
+
+      GUITAR_STRINGS.forEach((str, stringIndex) => {
+        if (activeVoicing && activeVoicing.frets) {
+          const fret = activeVoicing.frets[stringIndex];
+          if (fret >= 0) {
+            notesToPlay.push({
+              stringIndex,
+              fret,
+              pitch: str.pitch + fret,
+              isRoot: ((str.pitch + fret) % 12 === rootIdx)
+            });
+          }
+        } else {
+          // Play lowest available note for each string in full neck mode
+          for (let fret = 0; fret <= 12; fret++) {
+            const pitch = str.pitch + fret;
+            if (selectedIntervals.includes((pitch % 12 - rootIdx + 12) % 12)) {
+              notesToPlay.push({
+                stringIndex,
+                fret,
+                pitch,
+                isRoot: (pitch % 12 === rootIdx)
+              });
+              break;
+            }
+          }
+        }
+      });
+
+      return notesToPlay;
+    }
+
+    function playChordStrum() {
+      initAudio();
+      const notes = getPlaybackNotes();
+      notes.forEach((note, idx) => {
+        const delay = idx * 0.035; // 35ms strum delay
+        playPluckSound(note.pitch, delay);
+
+        setTimeout(() => {
+          const badge = document.getElementById(`badge-${note.stringIndex}-${note.fret}`);
+          triggerBadgeAnimation(badge, note.isRoot, note.stringIndex);
+        }, delay * 1000);
+      });
+    }
+
+    function playChordArpeggio() {
+      initAudio();
+      const notes = getPlaybackNotes();
+      notes.forEach((note, idx) => {
+        const delay = idx * 0.25; // 250ms arpeggio step
+        playPluckSound(note.pitch, delay);
+
+        setTimeout(() => {
+          const badge = document.getElementById(`badge-${note.stringIndex}-${note.fret}`);
+          triggerBadgeAnimation(badge, note.isRoot, note.stringIndex);
+        }, delay * 1000);
+      });
+    }
+
+    // --- EVENT LISTENERS ---
+    document.getElementById('root-select').addEventListener('change', (e) => {
+      currentRoot = e.target.value;
+      updateApp();
+    });
+
+    document.getElementById('quality-select').addEventListener('change', (e) => {
+      currentQuality = e.target.value;
+      if (CHORD_PRESETS[currentQuality]) {
+        selectedIntervals = [...CHORD_PRESETS[currentQuality]];
+      }
+      selectedVoicingIndex = 0;
+      updateApp();
+    });
+
+    document.getElementById('btn-strum').addEventListener('click', playChordStrum);
+    document.getElementById('btn-arpeggio').addEventListener('click', playChordArpeggio);
+
+    // Initial Load
+    updateApp();
+  </script>
+</body>
+</html>
